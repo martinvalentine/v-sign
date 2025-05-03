@@ -2,6 +2,7 @@
 /outputs/
 /third_party/
 /.idea/
+/src/vsign/evaluation/slr_eval/*.stm
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

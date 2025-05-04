@@ -67,7 +67,7 @@ python run_baseline.py \
 Demo:
 ```bash
 python src/vsign/inference/demo.py  \
-   --model_path /home/martinvalentine/Desktop/v-sign/outputs/logs/V1_aug/_best_model.pt     
+   --model_path /home/martinvalentine/Desktop/v-sign/outputs/logs/baseline_res18/_best_model.pt     
    --device 0 \
-   --dict_path /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V1/gloss_dict.npy
+   --dict_path /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V0/gloss_dict.npy
 ```

@@ -204,7 +204,10 @@ class Processor():
         shutil.copy2(inspect.getfile(self.feeder), self.arg.work_dir)
         if self.arg.dataset == 'VSL_V0':
             dataset_list = zip(["train", "dev", "test"], [True, False, False])
-
+        elif self.arg.dataset == 'VSL_V1':
+            dataset_list = zip(["train", "dev", "test"], [True, False, False])
+        elif self.arg.dataset == 'VSL_V2':
+            dataset_list = zip(["train", "dev", "test"], [True, False, False])
         # DEBUG
         print("Dataset List: ", dataset_list)
 

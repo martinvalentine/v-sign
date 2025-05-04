@@ -80,7 +80,10 @@ class BaseFeeder(data.Dataset):
         # Build folder path for frames
         if 'VSL_V0' in self.dataset:
             img_folder = os.path.join(self.prefix, fi['folder'])
-
+        if 'VSL_V1' in self.dataset:
+            img_folder = os.path.join(self.prefix, fi['folder'])
+        if 'VSL_V2' in self.dataset:
+            img_folder = os.path.join(self.prefix, fi['folder'])
         # Gather sorted frame file paths, sample by frame_interval
         all_imgs = sorted(glob.glob(os.path.join(img_folder)))
         start = int(torch.randint(0, self.frame_interval, [1]))

@@ -1,3 +1,11 @@
+# Visual Sign Language Recognition Model
+
+This document details the architecture and usage instructions for the visual sign language recognition model.
+
+## Model Architecture
+
+The model processes video frames through a series of layers to generate sign language predictions.
+
 ```text
 Input: Video Frames [Batch x Time x Channels x Height x Width]
             │
@@ -46,8 +54,43 @@ Input: Video Frames [Batch x Time x Channels x Height x Width]
    │ - Decodes predictions│
    └──────────────────────┘
 ```
-Training:
-Adjust [vsl_preprocess.py](src/vsign/data/vsl_preprocess.py), [extract_frames.py](src/vsign/data/extract_frames.py)
+*Flow Diagram Simplified:*
+```text
+Video Frames
+     │
+     ▼
+ResNet Backbone (Spatial Feat)
+     │
+     ▼
+TemporalConv (Temporal Conv Feat)
+     │
+     ▼
+BiLSTM (Temporal Context)
+     │
+     ▼
+Classification (Predictions)
+     │
+     ▼
+  Logits
+```
+
+## Preprocessing
+
+**Important:** [vsl_preprocess.py](src/vsign/data/vsl_preprocess.py), [extract_frames.py](src/vsign/data/extract_frames.py) before running the following steps.
+
+1.  **Extract Frames and Annotations:**
+    ```bash
+    python extract_frames.py
+    ```
+
+2.  **Extract Features:** (Resizes images, creates gloss dictionary, info file, and groundtruth)
+    ```bash
+    python /home/martinvalentine/Desktop/v-sign/src/vsign/data/vsl_preprocess.py --process-image --multiprocessing
+    ```
+
+## Training
+
+Run the training script using the baseline configuration.
 
 ```bash
 python run_baseline.py \
@@ -55,7 +98,8 @@ python run_baseline.py \
   --device 0
 ```
 
-Evaluation:
+## Evaluation:
+Evaluate the model performance on the test set using saved weights.
 ```bash
 python run_baseline.py \
   --config ./configs/baseline.yaml \
@@ -64,7 +108,8 @@ python run_baseline.py \
   --phase test
 ```
 
-Demo:
+## Demo:
+Run the inference demo script with a trained model.
 ```bash
 python src/vsign/inference/demo.py  \
    --model_path /home/martinvalentine/Desktop/v-sign/outputs/logs/baseline_res18/_best_model.pt     

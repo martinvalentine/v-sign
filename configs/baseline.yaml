@@ -1,0 +1,48 @@
+feeder: vsign.data.dataloader_video.BaseFeeder
+phase: train
+dataset: VSL_V0
+num_epoch: 55
+work_dir: ./outputs/logs/baseline_res18/
+batch_size: 2
+random_seed: 42
+test_batch_size: 2
+num_worker: 10
+device: 0,1
+log_interval: 10000
+eval_interval: 1
+save_interval: 2
+# python in default
+evaluate_tool: sclite
+loss_weights:
+  SeqCTC: 1.0
+  # VAC
+  ConvCTC: 1.0
+  Dist: 25.0
+#load_weights: '' # If you want to load a pre-trained model, please set the path here
+
+optimizer_args:
+  optimizer: Adam # If you want to use SGD, set nesterov=True
+  base_lr: 0.0001
+  step: [ 20, 35]
+  learning_ratio: 1
+  weight_decay: 0.0001
+  start_epoch: 0
+  nesterov: False # True if you use SGD
+
+feeder_args:
+  mode: 'train'
+  use_transform: True # whether to use data augmentation
+  frame_interval: 1
+  image_scale: 1.0  # 0-1 represents ratio, >1 represents absolute value
+  input_size: 224 # input size for conv2d model (resnet18)
+
+model: vsign.models.slr_network.SLRModel
+decode_mode: beam
+model_args:
+  num_classes: 9
+  c2d_type: resnet18
+  conv_type: 2
+  use_bn: 1
+  # SMKD
+  share_classifier: True
+  weight_norm: True

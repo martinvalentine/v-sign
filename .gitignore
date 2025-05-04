@@ -3,6 +3,7 @@
 /third_party/
 /.idea/
 /src/vsign/evaluation/slr_eval/*.stm
+/gradio_temp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

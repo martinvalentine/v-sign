@@ -116,3 +116,14 @@ python src/vsign/inference/demo.py  \
    --device 0 \
    --dict_path /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V0/gloss_dict.npy
 ```
+
+## Citation
+
+```text
+@inproceedings{hu2023continuous,
+  title={Continuous Sign Language Recognition with Correlation Network},
+  author={Hu, Lianyu and Gao, Liqing and Liu, Zekang and Feng, Wei},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  year={2023},
+}
+```

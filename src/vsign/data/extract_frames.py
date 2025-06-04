@@ -136,9 +136,9 @@ def process_split_optimized_raw_flat(root_dir, output_dir, csv_dir, split, num_p
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video_root', default="../../data/raw/VSL_V0", type=str)
-    parser.add_argument('--output_root', default="../../data/interim/frames/VSL_V0", type=str)
-    parser.add_argument('--csv_root', default="../../data/splits/VSL_V0/csv", type=str)
+    parser.add_argument('--video_root', default="/home/martinvalentine/Desktop/v-sign/data/raw/VSL_V0", type=str)
+    parser.add_argument('--output_root', default="/home/martinvalentine/Desktop/v-sign/data/interim/frames/VSL_V0", type=str)
+    parser.add_argument('--csv_root', default="/home/martinvalentine/Desktop/v-sign/data/splits/VSL_V0/csv", type=str)
     parser.add_argument('--splits', nargs='+', default=["train", "test", "dev"])
     parser.add_argument('--sample_rate', type=int, default=2)
     parser.add_argument('--workers', type=int, default=max(1, cpu_count() - 1))

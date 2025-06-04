@@ -2,10 +2,17 @@ import os
 import pdb
 import time
 import torch
-import ctcdecode
 import numpy as np
 from itertools import groupby
 import torch.nn.functional as F
+
+# Try to import ctcdecode, fallback to PyTorch's built-in CTC decoder if not available
+try:
+    import ctcdecode
+    CTCDECODE_AVAILABLE = True
+except ImportError:
+    print("Warning: ctcdecode module not available, falling back to PyTorch's built-in CTC decoder")
+    CTCDECODE_AVAILABLE = False
 
 
 class Decode(object):
@@ -15,9 +22,14 @@ class Decode(object):
         self.num_classes = num_classes
         self.search_mode = search_mode
         self.blank_id = blank_id
-        vocab = [chr(x) for x in range(20000, 20000 + num_classes)]
-        self.ctc_decoder = ctcdecode.CTCBeamDecoder(vocab, beam_width=10, blank_id=blank_id,
-                                                    num_processes=10)
+        
+        if CTCDECODE_AVAILABLE:
+            vocab = [chr(x) for x in range(20000, 20000 + num_classes)]
+            self.ctc_decoder = ctcdecode.CTCBeamDecoder(vocab, beam_width=10, blank_id=blank_id,
+                                                       num_processes=10)
+        else:
+            print("Using PyTorch's built-in greedy CTC decoder as fallback")
+            # We'll implement a fallback in BeamSearch method
 
     def decode(self, nn_output, vid_lgt, batch_first=True, probs=False):
         if not batch_first:
@@ -39,14 +51,34 @@ class Decode(object):
         if not probs:
             nn_output = nn_output.softmax(-1).cpu()
         vid_lgt = vid_lgt.cpu()
-        beam_result, beam_scores, timesteps, out_seq_len = self.ctc_decoder.decode(nn_output, vid_lgt)
-        ret_list = []
-        for batch_idx in range(len(nn_output)):
-            first_result = beam_result[batch_idx][0][:out_seq_len[batch_idx][0]]
-            if len(first_result) != 0:
-                first_result = torch.stack([x[0] for x in groupby(first_result)])
-            ret_list.append([(self.i2g_dict[int(gloss_id)], idx) for idx, gloss_id in
-                             enumerate(first_result)])
+        
+        # Check if ctcdecode is available
+        if CTCDECODE_AVAILABLE:
+            beam_result, beam_scores, timesteps, out_seq_len = self.ctc_decoder.decode(nn_output, vid_lgt)
+            ret_list = []
+            for batch_idx in range(len(nn_output)):
+                first_result = beam_result[batch_idx][0][:out_seq_len[batch_idx][0]]
+                if len(first_result) != 0:
+                    first_result = torch.stack([x[0] for x in groupby(first_result)])
+                ret_list.append([(self.i2g_dict[int(gloss_id)], idx) for idx, gloss_id in
+                                enumerate(first_result)])
+        else:
+            # Fallback to greedy decoding (similar to MaxDecode but with no filtering)
+            print("Using fallback greedy decoding instead of beam search")
+            index_list = torch.argmax(nn_output, axis=2)
+            batchsize, lgt = index_list.shape
+            ret_list = []
+            for batch_idx in range(batchsize):
+                # Group repeated elements
+                group_result = [x[0] for x in groupby(index_list[batch_idx][:vid_lgt[batch_idx]])]
+                # Remove blank tokens
+                filtered = [*filter(lambda x: x != self.blank_id, group_result)]
+                if len(filtered) > 0:
+                    result = torch.stack(filtered)
+                else:
+                    result = filtered
+                ret_list.append([(self.i2g_dict[int(gloss_id)], idx) for idx, gloss_id in
+                                enumerate(result)])
         return ret_list
 
     def MaxDecode(self, nn_output, vid_lgt):

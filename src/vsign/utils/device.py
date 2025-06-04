@@ -11,12 +11,30 @@ class GpuDataParallel(object):
 
     def set_device(self, device):
         device = str(device)
-        if device != 'None':
-            self.gpu_list = [i for i in range(len(device.split(',')))]
-            os.environ["CUDA_VISIBLE_DEVICES"] = device
-            output_device = self.gpu_list[0]
-            self.occupy_gpu(self.gpu_list)
-        self.output_device = output_device if len(self.gpu_list) > 0 else "cpu"
+        # -1 means CPU mode
+        if device == '-1':
+            self.gpu_list = []
+            self.output_device = "cpu"
+        elif device != 'None':
+            # Check if CUDA is available
+            if not torch.cuda.is_available():
+                print("CUDA is not available. Using CPU instead.")
+                self.gpu_list = []
+                self.output_device = "cpu"
+                return
+                
+            try:
+                self.gpu_list = [i for i in range(len(device.split(',')))]
+                os.environ["CUDA_VISIBLE_DEVICES"] = device
+                output_device = self.gpu_list[0]
+                self.occupy_gpu(self.gpu_list)
+                self.output_device = output_device if len(self.gpu_list) > 0 else "cpu"
+            except AssertionError:
+                print("PyTorch not compiled with CUDA support. Using CPU instead.")
+                self.gpu_list = []
+                self.output_device = "cpu"
+        else:
+            self.output_device = "cpu"
 
     def model_to_device(self, model):
         # model = convert_model(model)
@@ -49,9 +67,21 @@ class GpuDataParallel(object):
         """
             make program appear on nvidia-smi.
         """
+        # Check if CUDA is available before attempting to use it
+        if not torch.cuda.is_available():
+            print("CUDA is not available. Using CPU instead.")
+            return
+
         if len(gpus) == 0:
-            torch.zeros(1).cuda()
+            try:
+                torch.zeros(1).cuda()
+            except AssertionError:
+                print("Unable to use CUDA. Using CPU instead.")
         else:
             gpus = [gpus] if isinstance(gpus, int) else list(gpus)
             for g in gpus:
-                torch.zeros(1).cuda(g)
+                try:
+                    torch.zeros(1).cuda(g)
+                except AssertionError:
+                    print("Unable to use CUDA. Using CPU instead.")
+                    break

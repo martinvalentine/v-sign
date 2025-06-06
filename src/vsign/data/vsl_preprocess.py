@@ -10,7 +10,7 @@ from functools import partial
 import argparse
 
 
-# TODO: REMEMBER TO RENAME THE FOLDER PATH CORRESPONDING TO YOUR PATH IN LINE 94 & 100
+# TODO: REMEMBER TO RENAME THE FOLDER PATH CORRESPONDING TO YOUR PATH IN LINE 98 & 102
 
 def resize_img(img_path, dsize='256x256px'):
     dsize = tuple(int(res) for res in re.findall("\d+", dsize))

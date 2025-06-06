@@ -93,6 +93,7 @@ def seq_eval(cfg, loader, model, device, mode, epoch, work_dir, recoder,
     total_sent = []           # For storing recognized sentences
     total_info = []           # For storing file-related information (e.g., filenames)
     total_conv_sent = []      # For storing conversational sentences, if available
+    loss_value = []           # For storing evaluation loss values
 
     # Initialize a dictionary to track statistics about the dataset (not used in this code)
     stat = {i: [0, 0] for i in range(len(loader.dataset.dict))}
@@ -110,6 +111,14 @@ def seq_eval(cfg, loader, model, device, mode, epoch, work_dir, recoder,
         # Perform inference with the model (no gradient calculation)
         with torch.no_grad():
             ret_dict = model(vid, vid_lgt, label=label, label_lgt=label_lgt)
+            # Calculate the loss explicitly using the model's criterion
+            loss = model.criterion_calculation(ret_dict, label, label_lgt)
+
+            # Check if loss is NaN or infinity, and skip adding it if so
+            if np.isinf(loss.item()) or np.isnan(loss.item()):
+                continue
+
+            loss_value.append(loss.item())
 
         # Collect file-related info and recognized sentences
         total_info += [info_dict['fileid'] for info_dict in data[-1]] # Use fileid directly from info dictionary
@@ -154,6 +163,12 @@ def seq_eval(cfg, loader, model, device, mode, epoch, work_dir, recoder,
         # Ensure no variables are holding large memory
         pass
 
+    # Log the mean evaluation loss if we have valid loss values
+    if loss_value:
+        recoder.print_log('\tMean evaluation loss: {:.10f}.'.format(np.mean(loss_value)))
+    else:
+        recoder.print_log('\tMean evaluation loss: No valid loss values collected.')
+
     # Cleanup - delete temporary variables to free up memory
     del conv_ret
     del total_sent
@@ -163,6 +178,8 @@ def seq_eval(cfg, loader, model, device, mode, epoch, work_dir, recoder,
     del vid_lgt
     del label
     del label_lgt
+    if loss_value:
+        del loss_value
 
     # Log the result for this epoch (e.g., accuracy or error rate)
     recoder.print_log(f"Epoch {epoch}, {mode} {lstm_ret: 2.2f}%", f"{work_dir}/{mode}.txt")
@@ -222,3 +239,4 @@ def write2file(path, info, output):
                                                  word_idx * 1.0 / 100,
                                                  (word_idx + 1) * 1.0 / 100,
                                                  word[0]))
+

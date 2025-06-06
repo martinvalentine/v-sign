@@ -7,6 +7,7 @@ from collections import OrderedDict
 import argparse
 import warnings
 import gradio as gr
+import time  # Added for timing measurements
 
 from vsign.utils import video_augmentation
 from vsign.models.slr_network import SLRModel
@@ -33,18 +34,23 @@ def llm_rephrase(prompt, input_api_key):
     }]
 
     try:
+        llm_start_time = time.time()
         response = litellm.completion(
             model="gemini/gemini-2.0-flash",
             messages=messages,
             api_key=input_api_key
         )
+        llm_end_time = time.time()
+        llm_time_taken = llm_end_time - llm_start_time
+        print(f"LLM rephrasing time: {llm_time_taken:.4f} seconds")
+        
         message = response.get("choices", [{}])[0].get("message", {})
         content = message.get("content", "")
         if not content:
-            return "LLM response was empty or improperly formatted."
-        return content.strip()
+            return "LLM response was empty or improperly formatted.", llm_time_taken
+        return content.strip(), llm_time_taken
     except Exception as e:
-        return f"LLM rephrase sentence failed: {e}"
+        return f"LLM rephrase sentence failed: {e}", 0.0
 
 def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
     """
@@ -59,17 +65,41 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
         args: Command-line arguments.
 
     Returns:
-        tuple: (result_string, list_of_image_paths, rephrased_sentence_or_status)
-               Always returns 3 values. The third indicates rephrasing status or result.
+        tuple: (result_string, list_of_image_paths, rephrased_sentence_or_status, timing_info)
+               - result_string: Recognition result or error message
+               - list_of_image_paths: List of processed image paths
+               - rephrased_sentence_or_status: LLM rephrased output or status message
+               - timing_info: Dictionary with 'inference_time', 'llm_time', 'total_time'
     """
+    # Start timing the full inference pipeline
+    total_start_time = time.time()
+    
+    # Initialize timing variables
+    inference_time_taken = 0.0
+    llm_time_taken = 0.0
+    
     # Define a default status for the rephrased sentence part
     rephrase_status_default = "Rephrasing not attempted."
 
     if not image_folder or not isinstance(image_folder, str):
-         return "Error: Please provide a valid folder path.", [], rephrase_status_default
+        total_end_time = time.time()
+        total_time_taken = total_end_time - total_start_time
+        timing_info = {
+            'inference_time': inference_time_taken,
+            'llm_time': llm_time_taken, 
+            'total_time': total_time_taken
+        }
+        return "Error: Please provide a valid folder path.", [], rephrase_status_default, timing_info
 
     if not os.path.isdir(image_folder):
-        return f"Error: Input path is not a valid directory: {image_folder}", [], rephrase_status_default
+        total_end_time = time.time()
+        total_time_taken = total_end_time - total_start_time
+        timing_info = {
+            'inference_time': inference_time_taken,
+            'llm_time': llm_time_taken, 
+            'total_time': total_time_taken
+        }
+        return f"Error: Input path is not a valid directory: {image_folder}", [], rephrase_status_default, timing_info
 
     img_list = []
     valid_image_paths = [] # Keep track of images successfully loaded
@@ -77,7 +107,14 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
     try:
         all_files = os.listdir(image_folder)
     except OSError as e:
-        return f"Error accessing folder: {e}", [], rephrase_status_default
+        total_end_time = time.time()
+        total_time_taken = total_end_time - total_start_time
+        timing_info = {
+            'inference_time': inference_time_taken,
+            'llm_time': llm_time_taken, 
+            'total_time': total_time_taken
+        }
+        return f"Error accessing folder: {e}", [], rephrase_status_default, timing_info
 
     image_files = sorted([
         os.path.join(image_folder, f) for f in all_files
@@ -85,8 +122,14 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
     ])
 
     if not image_files:
-         # Return 3 values
-        return f"Error: No supported image files ({', '.join(IMAGE_EXTENSIONS)}) found in directory: {image_folder}", [], rephrase_status_default
+        total_end_time = time.time()
+        total_time_taken = total_end_time - total_start_time
+        timing_info = {
+            'inference_time': inference_time_taken,
+            'llm_time': llm_time_taken, 
+            'total_time': total_time_taken
+        }
+        return f"Error: No supported image files ({', '.join(IMAGE_EXTENSIONS)}) found in directory: {image_folder}", [], rephrase_status_default, timing_info
 
     print(f"Found {len(image_files)} potential images in {image_folder}.")
 
@@ -107,7 +150,14 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
 
     if not img_list:
         # This case means images were found but none could be loaded by OpenCV
-        return "Error: Found image files, but none could be loaded successfully. Check file integrity.", [], rephrase_status_default
+        total_end_time = time.time()
+        total_time_taken = total_end_time - total_start_time
+        timing_info = {
+            'inference_time': inference_time_taken,
+            'llm_time': llm_time_taken, 
+            'total_time': total_time_taken
+        }
+        return "Error: Found image files, but none could be loaded successfully. Check file integrity.", [], rephrase_status_default, timing_info
 
     print(f"Processing {len(img_list)} images...")
 
@@ -127,7 +177,7 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
         left_pad = 0
         last_stride = 1
         total_stride = 1
-        kernel_sizes = ['K5', "P2", 'K5', "P2"] # Assuming these are fixed for the model
+        kernel_sizes = ['K5', "P2", 'K5', "P2"]
         for layer_idx, ks in enumerate(kernel_sizes):
             if ks[0] == 'K':
                 left_pad = left_pad * last_stride
@@ -160,8 +210,13 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
         vid = device.data_to_device(vid)
         vid_lgt = device.data_to_device(video_length)
 
+        # Start timing model inference
+        inference_start_time = time.time()
         with torch.no_grad(): # Ensure no gradients are calculated during inference
             ret_dict = model(vid, vid_lgt, label=None, label_lgt=None)
+        inference_end_time = time.time()
+        inference_time_taken = inference_end_time - inference_start_time
+        print(f"Model inference time: {inference_time_taken:.4f} seconds")
 
         # --- Format Results ---
         rephrased_sentence_result = "Rephrasing skipped: No valid recognition." # Default status
@@ -170,37 +225,72 @@ def run_inference(image_folder, model, device, gloss_dict, input_api_key, args):
             result_string = " ".join(recognized_glosses)
 
             if not result_string: # Handle case where model outputs empty sequence
-                 return "Recognition returned an empty sequence.", valid_image_paths, "Rephrasing skipped: Empty sequence."
+                total_end_time = time.time()
+                total_time_taken = total_end_time - total_start_time
+                timing_info = {
+                    'inference_time': inference_time_taken,
+                    'llm_time': llm_time_taken, 
+                    'total_time': total_time_taken
+                }
+                return "Recognition returned an empty sequence.", valid_image_paths, "Rephrasing skipped: Empty sequence.", timing_info
             else:
                 # --- LLM for rephrase gloss sentence (only if glosses found and API key provided) ---
                 if input_api_key and input_api_key.strip():
                     try:
                         if not os.path.exists("/home/martinvalentine/Desktop/v-sign/src/vsign/inference/prompt.txt"):
                              rephrased_sentence_result = "Rephrasing Error: prompt.txt not found."
-                             print("Error: prompt.txt not found.")
+                             print("Error: prompt.txt not found.") 
                         else:
                             with open("/home/martinvalentine/Desktop/v-sign/src/vsign/inference/prompt.txt", "r") as f:
                                 prompt_base = f.read()
                             question = f"VSL Glosses: {result_string}\n    Vietnamese:"
                             prompt = prompt_base + "\n" + question
-                            rephrased_sentence_result = llm_rephrase(prompt, input_api_key) # llm_rephrase handles internal errors
+                            rephrased_sentence_result, llm_time_taken = llm_rephrase(prompt, input_api_key) # llm_rephrase handles internal errors
                     except Exception as e:
                         print(f"Error reading prompt file or preparing prompt: {e}")
                         rephrased_sentence_result = f"Rephrasing Error: Could not prepare prompt ({e})"
                 else:
-                     rephrased_sentence_result = "Rephrasing skipped: API Key not provided."
-
-                return result_string, valid_image_paths, rephrased_sentence_result
+                    rephrased_sentence_result = "Rephrasing skipped: API Key not provided."
+            
+            # Calculate and print total execution time
+            total_end_time = time.time()
+            total_time_taken = total_end_time - total_start_time
+            print(f"Total inference pipeline execution time: {total_time_taken:.4f} seconds")
+            
+            # Prepare timing information
+            timing_info = {
+                'inference_time': inference_time_taken,
+                'llm_time': llm_time_taken, 
+                'total_time': total_time_taken
+            }
+            
+            return result_string, valid_image_paths, rephrased_sentence_result, timing_info
         else:
             # Model didn't return expected output structure
-            return "Model did not return recognized sentences.", valid_image_paths, "Rephrasing skipped: Model output error."
+            total_end_time = time.time()
+            total_time_taken = total_end_time - total_start_time
+            print(f"Total inference pipeline execution time (no recognition): {total_time_taken:.4f} seconds")
+            timing_info = {
+                'inference_time': inference_time_taken,
+                'llm_time': llm_time_taken, 
+                'total_time': total_time_taken
+            }
+            return "Model did not return recognized sentences.", valid_image_paths, "Rephrasing skipped: Model output error.", timing_info
 
     except Exception as e:
         # Catch potential errors during transform, padding, or inference
         import traceback
         print("Error during processing or inference:")
         traceback.print_exc() # Print detailed error for debugging server-side
-        return f"Error during processing: {e}", valid_image_paths, "Rephrasing skipped: Processing error."
+        total_end_time = time.time()
+        total_time_taken = total_end_time - total_start_time
+        print(f"Total inference pipeline execution time (with error): {total_time_taken:.4f} seconds")
+        timing_info = {
+            'inference_time': inference_time_taken,
+            'llm_time': llm_time_taken, 
+            'total_time': total_time_taken
+        }
+        return f"Error during processing: {e}", valid_image_paths, "Rephrasing skipped: Processing error.", timing_info
 
 def parse_args():
     """Parse command-line arguments needed for model setup (not UI inputs)."""
@@ -289,15 +379,22 @@ if __name__ == "__main__":
         print(f"\nReceived folder path from UI: {folder_path}")
 
         # Call inference
-        result_string, image_paths, rephrased_sentence = run_inference(
+        result_string, image_paths, rephrased_sentence, timing_info = run_inference(
             folder_path, model, device_util, gloss_dict, input_api_key, args
         )
         print(f"Inference result: {result_string}")
         print(f"Rephrased sentence (Gemini 2.0): {rephrased_sentence}")
         print(f"Images processed: {len(image_paths)}")
 
+        # Format individual timing displays
+        model_time_display = f"{timing_info['inference_time']:.4f} seconds"
+        llm_time_display = f"{timing_info['llm_time']:.4f} seconds"
+        
+        # Add total time to rephrased sentence
+        rephrased_with_timing = f"{rephrased_sentence}\n\n Total Pipeline Time: {timing_info['total_time']:.4f} seconds"
+
         # Return results formatted for Gradio outputs
-        return result_string, rephrased_sentence, image_paths if image_paths else None
+        return result_string, model_time_display, llm_time_display, rephrased_with_timing, image_paths if image_paths else None
 
 
     # --- Create and Launch Gradio Interface ---
@@ -332,6 +429,22 @@ if __name__ == "__main__":
                         label="Output Gloss Sequence",
                         interactive=False
                     )
+                    
+                    # Separate timing fields
+                    with gr.Row():
+                        model_time_display = gr.Textbox(
+                            label="Model Inference Time",
+                            value="⚡ Waiting...",
+                            interactive=False,
+                            scale=1
+                        )
+                        llm_time_display = gr.Textbox(
+                            label="LLM Rephrasing Time", 
+                            value="🤖 Waiting...",
+                            interactive=False,
+                            scale=1
+                        )
+                    
                     rephrased_sentence = gr.Textbox(
                         label="Rephrased Sentence / Status",  # Label reflects it might show status
                         interactive=False
@@ -353,7 +466,7 @@ if __name__ == "__main__":
         run_button.click(
             fn=gradio_interface_handler,  # Backend function
             inputs=[folder_path_input, api_key_input],
-            outputs=[results_output, rephrased_sentence, image_gallery]  # Map results to UI
+            outputs=[results_output, rephrased_sentence, timing_display, image_gallery]  # Map results to UI
         )
 
     # Launch app

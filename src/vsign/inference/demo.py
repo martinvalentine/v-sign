@@ -400,73 +400,113 @@ if __name__ == "__main__":
     # --- Create and Launch Gradio Interface ---
     with gr.Blocks(title='Continuous Sign Language Recognition (Folder Input)') as demo:
         gr.Markdown("<center><font size=5>Continuous Sign Language Recognition</font></center>")
-        gr.Markdown("**Enter the full path to a folder containing sequence of images.**")
 
-        # Main row containing the two primary columns
-        with gr.Row(equal_height=False):
-            # --- Left Column: Contains all controls and text outputs ---
-            with gr.Column(scale=2):  # Give this column more relative width
+        with gr.Tab("Folder path (Local test only)"): # TAB 1: For local test
+            # Main row containing the two primary columns
+            with gr.Row(equal_height=False):
+                # --- Left Column: Contains all controls and text outputs ---
+                with gr.Column(scale=2):  # Give this column more relative width
+                    # Group the input fields together
+                    with gr.Group():
+                        folder_path_input = gr.Textbox(
+                            label="Image Folder Path",
+                            placeholder="/path/to/your/image_folder",
+                            info="Enter the full path to the folder containing image frames."
+                        )
+                        api_key_input = gr.Textbox(
+                            label="Gemini API Key (Optional)",
+                            placeholder="Enter API Key only if you want to rephrase the gloss sequence",
+                            type="password",
+                            info="Needed for rephrasing the output glosses into a sentence."
+                        )
 
-                # Group the input fields together
-                with gr.Group():
-                    folder_path_input = gr.Textbox(
-                        label="Image Folder Path",
-                        placeholder="/path/to/your/image_folder",
-                        info="Enter the full path to the folder containing image frames."
+                    run_button = gr.Button("Run Recognition & Rephrase", variant="primary")
+
+                    # Group the text output fields together
+                    with gr.Group():
+                        results_output = gr.Textbox(
+                            label="Output Gloss Sequence",
+                            interactive=False
+                        )
+                        
+                        # Separate timing fields
+                        with gr.Row():
+                            model_time_display = gr.Textbox(
+                                label="Model Inference Time",
+                                value="⚡ Waiting...",
+                                interactive=False,
+                                scale=1
+                            )
+                            llm_time_display = gr.Textbox(
+                                label="LLM Rephrasing Time", 
+                                value="🤖 Waiting...",
+                                interactive=False,
+                                scale=1
+                            )
+                        
+                        rephrased_sentence = gr.Textbox(
+                            label="Rephrased Sentence / Status",  # Label reflects it might show status
+                            interactive=False
+                        )
+                # --- Right Column: Contains the visual image output ---
+                with gr.Column(scale=1):  # Give this column less relative width
+                    image_gallery_tab_1 = gr.Gallery(
+                        label="Processed Images",
+                        show_label=True,
+                        elem_id="gallery",
+                        columns=5,
+                        height=600,
+                        object_fit="contain"  # images fit
                     )
-                    api_key_input = gr.Textbox(
-                        label="Gemini API Key (Optional)",
-                        placeholder="Enter API Key only if you want to rephrase the gloss sequence",
-                        type="password",
-                        info="Needed for rephrasing the output glosses into a sentence."
-                    )
-
-                run_button = gr.Button("Run Recognition & Rephrase", variant="primary")
-
-                # Group the text output fields together
-                with gr.Group():
-                    results_output = gr.Textbox(
-                        label="Output Gloss Sequence",
-                        interactive=False
-                    )
-                    
-                    # Separate timing fields
+        with gr.Tab("Test with images"): # TAB 2: For online testing deployment 
+            # Main row containing the two primary columns
+            with gr.Row(equal_height=False):
+                # --- Left Column: Contains all controls and text outputs ---
+                with gr.Column(scale=2):  # Give this column more relative width   
                     with gr.Row():
-                        model_time_display = gr.Textbox(
-                            label="Model Inference Time",
-                            value="⚡ Waiting...",
-                            interactive=False,
-                            scale=1
-                        )
-                        llm_time_display = gr.Textbox(
-                            label="LLM Rephrasing Time", 
-                            value="🤖 Waiting...",
-                            interactive=False,
-                            scale=1
-                        )
-                    
-                    rephrased_sentence = gr.Textbox(
-                        label="Rephrased Sentence / Status",  # Label reflects it might show status
-                        interactive=False
+                        with gr.Column(scale=1):
+                            Multi_image_input = gr.UploadButton(label="Click to upload multiple images", file_types = ['.png','.jpg','.jpeg', '.bmp'], file_count = "multiple")
+                            multiple_image_button = gr.Button("Run")  
+                        with gr.Column(scale=1):
+                            multiple_image_output = gr.Textbox(label="Output")
+                # --- Right Column: Contains the visual image output ---
+                with gr.Column(scale=1):  # Give this column less relative width
+                    image_gallery_tab_2 = gr.Gallery(
+                        label="Processed Images",
+                        show_label=True,
+                        elem_id="gallery",
+                        columns=5,
+                        height=600,
+                        object_fit="contain"  # images fit
                     )
-
-            # --- Right Column: Contains the visual image output ---
-            with gr.Column(scale=1):  # Give this column less relative width
-                image_gallery = gr.Gallery(
-                    label="Processed Images",
-                    show_label=True,
-                    elem_id="gallery",
-                    columns=5,
-                    height=600,
-                    object_fit="contain"  # images fit
-                )
+        with gr.Tab("Test with video"): # TAB 3: For online testing deployment 
+            # Main row containing the two primary columns
+            with gr.Row(equal_height=False):
+                # --- Left Column: Contains all controls and text outputs ---
+                with gr.Column(scale=2):  # Give this column more relative width
+                    with gr.Row():
+                        with gr.Column(scale=1):
+                            Video_input = gr.Video(sources=["upload"], label="Upload a video file")
+                            video_button = gr.Button("Run")  
+                        with gr.Column(scale=1):
+                            video_output = gr.Textbox(label="Output")
+                # --- Right Column: Contains the visual image output ---
+                with gr.Column(scale=1):  # Give this column less relative width
+                    image_gallery_tab_3 = gr.Gallery(
+                        label="Processed Images",
+                        show_label=True,
+                        elem_id="gallery",
+                        columns=5,
+                        height=600,
+                        object_fit="contain"  # images fit
+                    )
 
         # --- Event Handler Connection ---
         # .click() definition after all components involved are defined.
         run_button.click(
             fn=gradio_interface_handler,  # Backend function
             inputs=[folder_path_input, api_key_input],
-            outputs=[results_output, rephrased_sentence, timing_display, image_gallery]  # Map results to UI
+            outputs=[results_output, model_time_display, llm_time_display, rephrased_sentence, image_gallery_tab_1]  # Map results to UI
         )
 
     # Launch app

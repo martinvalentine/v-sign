@@ -5,7 +5,13 @@ import torch.nn.functional as F
 
 class SeqKD(nn.Module):
     """
-    NLL loss with label smoothing.
+    Knowledge distillation loss for sequence models.
+    This loss function computes the Kullback-Leibler divergence between the 
+    softmax distributions of the student model (prediction_logits) and the 
+    teacher model (ref_logits), with optional temperature scaling.
+    
+    The teacher model is typically the BiLSTM output, which has captured more 
+    complex temporal dependencies than the student model (temporal convolution).
     """
 
     def __init__(self, T=1):
@@ -16,7 +22,7 @@ class SeqKD(nn.Module):
     def forward(self, prediction_logits, ref_logits, use_blank=True):
         start_idx = 0 if use_blank else 1
         prediction_logits = F.log_softmax(prediction_logits[:, :, start_idx:]/self.T, dim=-1) \
-            .view(-1, ref_logits.shape[2] - start_idx)
+            .view(-1, ref_logits.shape[2] - start_idx) 
         ref_probs = F.softmax(ref_logits[:, :, start_idx:]/self.T, dim=-1) \
             .view(-1, ref_logits.shape[2] - start_idx)
         loss = self.kdloss(prediction_logits, ref_probs)*self.T*self.T

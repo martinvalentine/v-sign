@@ -33,9 +33,11 @@ class Get_Correlation(nn.Module):
 
         x2 = self.down_conv2(x)
 
-        # Calculate the correlation
-        affinities = torch.einsum('bcthw,bctsd->bthwsd', x, torch.concat([x2[:,:,1:], x2[:,:,-1:]], 2))  # repeat the last frame
-        affinities2 = torch.einsum('bcthw,bctsd->bthwsd', x, torch.concat([x2[:,:,:1], x2[:,:,:-1]], 2))  # repeat the first frame
+        # Calculate the correlation with h,w is spatial position in current frame and s,d is spatial position in the next frame
+        # [:,:,1:] is a three dimensional tensor with the first frame removed, [:,:,-1:] is the last frame
+
+        affinities = torch.einsum('bcthw,bctsd->bthwsd', x, torch.concat([x2[:,:,1:], x2[:,:,-1:]], 2))  # Calculate with the next frame 
+        affinities2 = torch.einsum('bcthw,bctsd->bthwsd', x, torch.concat([x2[:,:,:1], x2[:,:,:-1]], 2))  # Calculate with the previous frame
 
         # Calculate the correlation features
         features = torch.einsum('bctsd,bthwsd->bcthw', torch.concat([x2[:,:,1:], x2[:,:,-1:]], 2), F.sigmoid(affinities)-0.5 )* self.weights2[0] + \
@@ -95,33 +97,57 @@ class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=1000):
         self.inplanes = 64
-        super(ResNet, self).__init__()
+        super(ResNet, self).__init__() # Initialize ResNet with BasicBlock
+
         self.conv1 = nn.Conv3d(3, 64, kernel_size=(1,7,7), stride=(1,2,2), padding=(0,3,3),
                                bias=False)
-        self.bn1 = nn.BatchNorm3d(64)
+        """
+        Why use a 1x7x7 kernel size in the first convolutional layer?
+        
+        1) Temporal-Spatial Processing: 
+           - The (1,7,7) kernel allows the model to process video data as a sequence of frames
+           - The first dimension (1) spans the temporal axis but only processes one frame at a time
+           - The second and third dimensions (7,7) capture spatial features within each frame
+        
+        2) Model Architecture Benefits:
+           - Enables leveraging pretrained 2D ResNet weights while handling temporal data
+           - Preserves temporal ordering by not mixing information across frames
+           - Creates a pseudo-3D architecture while maintaining computational efficiency
+        
+        3) Dimension Handling:
+           - Input: N (batch) x C (channels) x T (time steps) x H (height) x W (width)
+           - This conv layer preserves the temporal dimension (T) while reducing spatial dimensions
+           - Subsequent temporal correlations (via Get_Correlation) will model frame relationships
+        """
+
+        self.bn1 = nn.BatchNorm3d(64) # Batch normalization for the first conv layer
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool3d(kernel_size=(1,3,3), stride=(1,2,2), padding=(0,1,1))
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.maxpool = nn.MaxPool3d(kernel_size=(1,3,3), stride=(1,2,2), padding=(0,1,1)) # Max pooling to reduce spatial dimensions with kernel size (1,3,3) meaning no temporal pooling, only spatial pooling
+        self.layer1 = self._make_layer(block, 64, layers[0]) # First layer with 64 output channels
+
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2) 
         self.corr1 = Get_Correlation(self.inplanes)
+        
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.corr2 = Get_Correlation(self.inplanes)
-        self.alpha = nn.Parameter(torch.zeros(3), requires_grad=True)
+        self.alpha = nn.Parameter(torch.zeros(3), requires_grad=True) # Learnable parameters to control the contribution of correlation features
+
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.corr3 = Get_Correlation(self.inplanes)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
+
+        self.avgpool = nn.AvgPool2d(7, stride=1) # Average pooling to reduce the spatial dimensions to 1x1 before the final fully connected layer
         # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.fc = nn.Linear(512 * block.expansion, num_classes) # Final fully connected layer to output class scores
 
 
-        for m in self.modules():
+        for m in self.modules(): # Initialize weights for the model
             if isinstance(m, nn.Conv3d) or isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             elif isinstance(m, nn.BatchNorm3d) or isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-    def _make_layer(self, block, planes, blocks, stride=1):
+    def _make_layer(self, block, planes, blocks, stride=1): # Create a layer of blocks with specified planes and stride
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -138,8 +164,8 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
-        N, C, T, H, W = x.size()
+    def forward(self, x): # Forward pass through the ResNet model
+        N, C, T, H, W = x.size() # N is batch size, C is number of channels, T is number of frames, H is height, W is width
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -153,11 +179,11 @@ class ResNet(nn.Module):
         x = self.layer4(x)
         x = x + self.corr3(x) * self.alpha[2]
         x = x.transpose(1,2).contiguous()
-        x = x.view((-1,)+x.size()[2:]) #bt,c,h,w
+        x = x.view((-1,)+x.size()[2:]) #bt,c,h,w: # Reshape the tensor from [N, T, C, H, W] to (batch_size * T, channels, height, width)
 
         x = self.avgpool(x)
-        x = x.view(x.size(0), -1) #bt,c
-        x = self.fc(x) #bt,c
+        x = x.view(x.size(0), -1) #bt,c: (batch_size * T, channels dimension)
+        x = self.fc(x) #bt,c # Final fully connected layer to output class scores
 
         return x
 

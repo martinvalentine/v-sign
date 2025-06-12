@@ -2,6 +2,38 @@
 
 This document details the architecture and usage instructions for the visual sign language recognition model.
 
+## Prerequisites
+
+- This project is implemented in Pytorch (it should be >=1.13 to be compatible with ctcdecode, or there may be errors) (**Install First**)
+
+- ctcdecode==0.4 [[parlance/ctcdecode]](https://github.com/parlance/ctcdecode)，for beam search decode. (ctcdecode is only supported on the Linux platform.)
+  Install to `./third_party` folder
+
+- [Optional] sclite [[kaldi-asr/kaldi]](https://github.com/kaldi-asr/kaldi), install kaldi tool to get sclite for evaluation. After installation, create a soft link to the sclite: 
+  ```bash
+  cd /vsign
+  mkdir ./third_party
+  cd ./third_party && mkdir ./sofware
+  ln -s PATH_TO_KALDI/tools/SCTK/bin/sclite ./software/sclite
+  ```
+
+   You may use the Python version evaluation tool for convenience (by setting 'evaluate_tool' as 'python' in line 16 of ./configs/baseline.yaml), but sclite can provide more detailed statistics.
+
+- You can install other required modules by conducting 
+   ```bash
+  pip install -r requirements.txt
+   ```
+  or you can install the environment I'm currently working on:
+    ```bash
+    conda env create -f environment.yml (**will update later**)
+    ```
+  This will create a new conda env.
+
+- You also need to install `src/cslr_vsl/` as a package. You can do this by running:
+  ```bash
+  pip install -e .
+  ```
+
 ## Model Architecture
 
 The model processes video frames through a series of layers to generate sign language predictions.

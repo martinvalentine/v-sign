@@ -114,16 +114,18 @@ def seq_eval(cfg, loader, model, device, mode, epoch, work_dir, recoder,
             # Calculate the loss explicitly using the model's criterion
             loss = model.criterion_calculation(ret_dict, label, label_lgt)
 
-            # Check if loss is NaN or infinity, and skip adding it if so
-            if np.isinf(loss.item()) or np.isnan(loss.item()):
-                continue
-
-            loss_value.append(loss.item())
-
-        # Collect file-related info and recognized sentences
+        # Collect file-related info and recognized sentences (always do this)
         total_info += [info_dict['fileid'] for info_dict in data[-1]] # Use fileid directly from info dictionary
         total_sent += ret_dict['recognized_sents']  # Recognized sentences
         total_conv_sent += ret_dict['conv_sents']  # Conversational sentences (if any)
+
+        # Only add loss if it's valid (not NaN or infinity)
+        if not (torch.isnan(loss).item() or torch.isinf(loss).item()):
+            loss_value.append(loss.item())
+        else:
+            print(f'Evaluation loss is {"inf" if torch.isinf(loss).item() else "nan"} for batch {batch_idx}')
+            print(f'Video lengths: {data[1]}  frames')
+            print(f'Label lengths: {data[3]}  glosses')
 
     try:
         # Set the evaluation tool flag based on the user input
@@ -186,7 +188,6 @@ def seq_eval(cfg, loader, model, device, mode, epoch, work_dir, recoder,
 
     # Return the evaluation result (e.g., error rate or performance metric)
     return lstm_ret
-
 
 
 def seq_feature_generation(loader, model, device, mode, work_dir, recoder):

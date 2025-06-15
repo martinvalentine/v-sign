@@ -3,7 +3,7 @@
 # ----------------------------------------
 import cv2
 import pdb
-import PIL
+from PIL import Image as PIL_Image
 import copy
 import scipy.misc
 import torch
@@ -118,7 +118,7 @@ class RandomCrop(object):
         crop_h, crop_w = self.size
         if isinstance(clip[0], np.ndarray):
             im_h, im_w, im_c = clip[0].shape
-        elif isinstance(clip[0], PIL.Image.Image):
+        elif isinstance(clip[0], PIL_Image.Image):
             im_w, im_h = clip[0].size
         else:
             raise TypeError('Expected numpy.ndarray or PIL.Image' +
@@ -141,7 +141,7 @@ class RandomCrop(object):
 
         if isinstance(clip[0], np.ndarray):
             return [img[h1:h1 + crop_h, w1:w1 + crop_w, :] for img in clip]
-        elif isinstance(clip[0], PIL.Image.Image):
+        elif isinstance(clip[0], PIL_Image.Image):
             return [img.crop((w1, h1, w1 + crop_w, h1 + crop_h)) for img in clip]
 
 
@@ -211,7 +211,7 @@ class RandomRotation(object):
         angle = random.uniform(self.degrees[0], self.degrees[1])
         if isinstance(clip[0], np.ndarray):
             rotated = [scipy.misc.imrotate(img, angle) for img in clip]
-        elif isinstance(clip[0], PIL.Image.Image):
+        elif isinstance(clip[0], PIL_Image.Image):
             rotated = [img.rotate(angle) for img in clip]
         else:
             raise TypeError('Expected numpy.ndarray or PIL.Image' +
@@ -261,7 +261,7 @@ class RandomResize(object):
 
         if isinstance(clip[0], np.ndarray):
             im_h, im_w, im_c = clip[0].shape
-        elif isinstance(clip[0], PIL.Image.Image):
+        elif isinstance(clip[0], PIL_Image.Image):
             im_w, im_h = clip[0].size
 
         new_w = int(im_w * scaling_factor)
@@ -269,22 +269,22 @@ class RandomResize(object):
         new_size = (new_h, new_w)
         if isinstance(clip[0], np.ndarray):
             return [scipy.misc.imresize(img, size=(new_h, new_w), interp=self.interpolation) for img in clip]
-        elif isinstance(clip[0], PIL.Image.Image):
+        elif isinstance(clip[0], PIL_Image.Image):
             return [img.resize(size=(new_w, new_h), resample=self._get_PIL_interp(self.interpolation)) for img in clip]
         else:
             raise TypeError('Expected numpy.ndarray or PIL.Image' +
                             'but got list of {0}'.format(type(clip[0])))
     def _get_PIL_interp(self, interp):
         if interp == 'nearest':
-            return PIL.Image.NEAREST
+            return PIL_Image.NEAREST
         elif interp == 'lanczos':
-            return PIL.Image.LANCZOS
+            return PIL_Image.LANCZOS
         elif interp == 'bilinear':
-            return PIL.Image.BILINEAR
+            return PIL_Image.BILINEAR
         elif interp == 'bicubic':
-            return PIL.Image.BICUBIC
+            return PIL_Image.BICUBIC
         elif interp == 'cubic':
-            return PIL.Image.CUBIC
+            return PIL_Image.CUBIC
 
 
 class Resize(object):
@@ -308,15 +308,15 @@ class Resize(object):
 
         if isinstance(clip[0], np.ndarray):
             im_h, im_w, im_c = clip[0].shape
-        elif isinstance(clip[0], PIL.Image.Image):
+        elif isinstance(clip[0], PIL_Image.Image):
             im_w, im_h = clip[0].size
 
         new_w = int(im_w * scaling_factor) if scaling_factor>0 and scaling_factor<=1 else int(scaling_factor)
         new_h = int(im_h * scaling_factor) if scaling_factor>0 and scaling_factor<=1 else int(scaling_factor)
         new_size = (new_w, new_h)
         if isinstance(clip[0], np.ndarray):
-            return [np.array(PIL.Image.fromarray(img).resize(new_size)) for img in clip]
-        elif isinstance(clip[0], PIL.Image.Image):
+            return [np.array(PIL_Image.fromarray(img).resize(new_size)) for img in clip]
+        elif isinstance(clip[0], PIL_Image.Image):
             return [img.resize(size=(new_w, new_h), resample=self._get_PIL_interp(self.interpolation)) for img in clip]
         else:
             raise TypeError('Expected numpy.ndarray or PIL.Image' +
@@ -324,12 +324,12 @@ class Resize(object):
 
     def _get_PIL_interp(self, interp):
         if interp == 'nearest':
-            return PIL.Image.NEAREST
+            return PIL_Image.NEAREST
         elif interp == 'lanczos':
-            return PIL.Image.LANCZOS
+            return PIL_Image.LANCZOS
         elif interp == 'bilinear':
-            return PIL.Image.BILINEAR
+            return PIL_Image.BILINEAR
         elif interp == 'bicubic':
-            return PIL.Image.BICUBIC
+            return PIL_Image.BICUBIC
         elif interp == 'cubic':
-            return PIL.Image.CUBIC
+            return PIL_Image.CUBIC

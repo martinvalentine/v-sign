@@ -84,8 +84,31 @@ class BaseFeeder(data.Dataset):
             img_folder = os.path.join(self.prefix, fi['folder'])
         if 'VSL_V2' in self.dataset:
             img_folder = os.path.join(self.prefix, fi['folder'])
+        
+        # DEBUG: Print folder path for debugging
+        print(f"Looking for images in: {img_folder}")
+        
         # Gather sorted frame file paths, sample by frame_interval
-        all_imgs = sorted(glob.glob(os.path.join(img_folder)))
+        # FIX: The original glob pattern was incorrect - it was globbing the folder itself, not files inside
+        # Remove the wildcard from fi['folder'] since we're adding it here
+        folder_path = img_folder.replace('/*.*', '').replace('*.*', '')
+        all_imgs = sorted(glob.glob(os.path.join(folder_path, "*.png")))
+        
+        # DEBUG: Check if images were found
+        print(f"Found {len(all_imgs)} PNG files")
+        if len(all_imgs) == 0:
+            print(f"WARNING: No PNG files found in {folder_path}")
+            # Try other common image extensions as fallback
+            for ext in ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']:
+                fallback_imgs = sorted(glob.glob(os.path.join(folder_path, ext)))
+                if fallback_imgs:
+                    print(f"Found {len(fallback_imgs)} {ext} files as fallback")
+                    all_imgs = fallback_imgs
+                    break
+        
+        if len(all_imgs) == 0:
+            raise FileNotFoundError(f"No image files found in {folder_path}")
+        
         start = int(torch.randint(0, self.frame_interval, [1]))
         img_list = all_imgs[start::self.frame_interval]
 
@@ -95,12 +118,16 @@ class BaseFeeder(data.Dataset):
             if gloss in self.dict:
                 label_list.append(self.dict[gloss][0])
 
-        # Read & convert frames to RGB numpy arrays
-        frames = [
-            cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB)
-            for p in img_list
-        ]
-        print(f"Loaded {len(frames)} frames from {img_folder}")
+        # Read & convert frames to RGB numpy arrays with error checking
+        frames = []
+        for p in img_list:
+            img = cv2.imread(p)
+            if img is None:
+                print(f"ERROR: Could not read image {p}")
+                raise ValueError(f"Failed to load image: {p}")
+            frames.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        
+        print(f"Successfully loaded {len(frames)} frames from {folder_path}")
         return frames, label_list, fi
 
     def read_features(self, index):

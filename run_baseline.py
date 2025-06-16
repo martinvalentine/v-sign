@@ -208,6 +208,9 @@ class Processor():
             dataset_list = zip(["train", "dev", "test"], [True, False, False])
         elif self.arg.dataset == 'VSL_V2':
             dataset_list = zip(["train", "dev", "test"], [True, False, False])
+        elif self.arg.dataset == 'VSL_V3':
+            dataset_list = zip(["train", "dev", "test"], [True, False, False])
+            
         # DEBUG
         print("Dataset List: ", dataset_list)
 

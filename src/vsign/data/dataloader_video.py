@@ -84,7 +84,9 @@ class BaseFeeder(data.Dataset):
             img_folder = os.path.join(self.prefix, fi['folder'])
         if 'VSL_V2' in self.dataset:
             img_folder = os.path.join(self.prefix, fi['folder'])
-        
+        if 'VSL_V3' in self.dataset:
+            img_folder = os.path.join(self.prefix, fi['folder'])
+            
         # DEBUG: Print folder path for debugging
         print(f"Looking for images in: {img_folder}")
         

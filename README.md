@@ -120,6 +120,11 @@ Classification (Predictions)
     python /home/martinvalentine/Desktop/v-sign/src/vsign/data/vsl_preprocess.py --process-image --multiprocessing
     ```
 
+3.  **Combine both steps:**
+    ```bash
+      python /home/martinvalentine/Desktop/v-sign/src/vsign/data/vsl_preprocess_new.py --extract-frames --video-root /home/martinvalentine/Desktop/v-sign/data/raw/VSL_V2 --dataset-root /home/martinvalentine/Desktop/v-sign/data/interim/256x256px/VSL_V2 --processed-feature-root /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V2 --multiprocessing 
+    ``` 
+
 ## Training
 
 Run the training script using the baseline configuration.

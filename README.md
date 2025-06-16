@@ -29,7 +29,7 @@ This document details the architecture and usage instructions for the visual sig
     ```
   This will create a new conda env.
 
-- You also need to install `src/cslr_vsl/` as a package. You can do this by running:
+- You also need to install `src/vsign/` as a package. You can do this by running:
   ```bash
   pip install -e .
   ```
@@ -117,8 +117,9 @@ Classification (Predictions)
 
 2.  **Extract Features:** (Resizes images, creates gloss dictionary, info file, and groundtruth)
     ```bash
-    python /home/martinvalentine/Desktop/v-sign/src/vsign/data/vsl_preprocess.py --process-image --multiprocessing
+    python src/vsign/data/vsl_preprocess.py --process-image --multiprocessing
     ```
+    Remember to change parameters inside the file `vsl_preprocess.py`
 
 3.  **Combine both steps:**
     ```bash
@@ -131,17 +132,17 @@ Run the training script using the baseline configuration.
 
 ```bash
 python run_baseline.py \
-  --config ./configs/baseline.yaml \
+  --config configs/baseline.yaml \
   --device 0
 ```
 
 ## Evaluation:
-Evaluate the model performance on the test set using saved weights.
+Evaluate the model's performance on the test set using saved weights.
 ```bash
 python run_baseline.py \
-  --config ./configs/baseline.yaml \
+  --config configs/baseline.yaml \
   --device 0 \
-  --load-weights /home/martinvalentine/Desktop/v-sign/outputs/logs/baseline_res18/_best_model.pt \
+  --load-weights outputs/logs/baseline_res18/_best_model.pt \
   --phase test
 ```
 
@@ -149,9 +150,9 @@ python run_baseline.py \
 Run the inference demo script with a trained model.
 ```bash
 python src/vsign/inference/demo.py  \
-   --model_path /home/martinvalentine/Desktop/v-sign/outputs/logs/baseline_res18/_best_model.pt     
+   --model_path outputs/logs/baseline_res18/_best_model.pt  \
    --device 0 \
-   --dict_path /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V0/gloss_dict.npy
+   --dict_path data/processed/VSL_V2/gloss_dict.npy
 ```
 
 ## Citation

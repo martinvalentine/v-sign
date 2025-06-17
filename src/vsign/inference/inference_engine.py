@@ -25,7 +25,7 @@ def run_model_inference(vid, vid_lgt, model):
         ret_dict = model(vid, vid_lgt, label=None, label_lgt=None)
     inference_end_time = time.time()
     inference_time = inference_end_time - inference_start_time
-    print(f"Model inference time: {inference_time:.4f} seconds")
+    print(f"Thời gian dự đoán mô hình: {inference_time:.4f} giây")
     
     return ret_dict, inference_time
 
@@ -117,7 +117,7 @@ def run_inference_pipeline(img_list, valid_images_info, model, device, input_api
         # Calculate total execution time
         total_end_time = time.time()
         total_time_taken = total_end_time - total_start_time
-        print(f"Total inference pipeline execution time: {total_time_taken:.4f} seconds")
+        print(f"Thời gian thực hiện pipeline dự đoán: {total_time_taken:.4f} giây")
         
         # Prepare timing information
         timing_info = {
@@ -130,12 +130,12 @@ def run_inference_pipeline(img_list, valid_images_info, model, device, input_api
         
     except Exception as e:
         # Catch potential errors during transform, padding, or inference
-        print("Error during processing or inference:")
-        traceback.print_exc()  # Print detailed error for debugging server-side
+        print("Lỗi trong quá trình xử lý hoặc dự đoán:")
+        traceback.print_exc()  # In ra lỗi chi tiết cho việc gỡ lỗi trên máy chủ
         
         total_end_time = time.time()
         total_time_taken = total_end_time - total_start_time
-        print(f"Total inference pipeline execution time (with error): {total_time_taken:.4f} seconds")
+        print(f"Thời gian thực hiện pipeline dự đoán (với lỗi): {total_time_taken:.4f} giây")
         
         timing_info = {
             'inference_time': inference_time_taken,
@@ -143,4 +143,4 @@ def run_inference_pipeline(img_list, valid_images_info, model, device, input_api
             'total_time': total_time_taken
         }
         
-        return f"Error during processing: {e}", valid_images_info, "Rephrasing skipped: Processing error.", timing_info
+        return f"Lỗi trong quá trình xử lý: {e}", valid_images_info, "Rephrasing skipped: Lỗi xử lý", timing_info

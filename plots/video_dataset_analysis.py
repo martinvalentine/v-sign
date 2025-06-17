@@ -34,11 +34,12 @@ def get_video_duration(video_path):
 def analyze_video_durations(video_dir):
     """Analyze video durations in the dataset"""
     durations = []
+    video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
     
     # Walk through all subdirectories to find video files
     for root, dirs, files in os.walk(video_dir):
         for file in files:
-            if file.endswith('.mp4'):
+            if any(file.lower().endswith(ext) for ext in video_extensions):
                 video_path = os.path.join(root, file)
                 try:
                     cap = cv2.VideoCapture(video_path)
@@ -55,15 +56,46 @@ def analyze_video_durations(video_dir):
     
     return durations
 
-def analyze_dataset_stats(video_dir):
-    """Analyze dataset statistics: number of signers and average words per sample"""
-    signers = set()
-    word_counts = []
+def analyze_split_video_counts(video_dir):
+    """Analyze video counts in train/val/test splits"""
+    split_counts = {'train': 0, 'val': 0, 'test': 0}
+    split_found = {'train': False, 'val': False, 'test': False}
+    video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
     
     # Walk through all subdirectories to find video files
     for root, dirs, files in os.walk(video_dir):
         for file in files:
-            if file.endswith('.mp4'):
+            if any(file.lower().endswith(ext) for ext in video_extensions):
+                # Determine which split this video belongs to based on path
+                rel_path = os.path.relpath(root, video_dir).lower()
+                
+                # Check if path contains split indicators
+                if 'train' in rel_path:
+                    split_counts['train'] += 1
+                    split_found['train'] = True
+                elif 'val' in rel_path or 'validation' in rel_path or 'dev' in rel_path:
+                    split_counts['val'] += 1
+                    split_found['val'] = True
+                elif 'test' in rel_path:
+                    split_counts['test'] += 1
+                    split_found['test'] = True
+    
+    # If no split structure found, return None to indicate no splits
+    if not any(split_found.values()):
+        return None
+    
+    return split_counts
+
+def analyze_dataset_stats(video_dir):
+    """Analyze dataset statistics: number of signers and average words per sample"""
+    signers = set()
+    word_counts = []
+    video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
+    
+    # Walk through all subdirectories to find video files
+    for root, dirs, files in os.walk(video_dir):
+        for file in files:
+            if any(file.lower().endswith(ext) for ext in video_extensions):
                 # Extract information from filename
                 filename_base = os.path.splitext(file)[0]
                 parts = filename_base.split('_')
@@ -101,9 +133,9 @@ def create_dataset_summary_table(dataset_name, stats, output_path):
     """Create a summary table visualization"""
     
     # Create figure and axis with minimal size
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(8, 6))  # Increased height for split info
     ax.set_xlim(0, 8)
-    ax.set_ylim(0, 5)
+    ax.set_ylim(0, 6)  # Increased y limit
     ax.axis('off')
     
     # Create table data (no title row needed)
@@ -118,9 +150,18 @@ def create_dataset_summary_table(dataset_name, stats, output_path):
         ["Total Hours", f"{stats['total_hours']:.2f}"]
     ]
     
+    # Add split information if available
+    if stats.get('split_counts'):
+        split_counts = stats['split_counts']
+        table_data.extend([
+            ["Train Videos", f"{split_counts['train']:,}"],
+            ["Validation Videos", f"{split_counts['val']:,}"],
+            ["Test Videos", f"{split_counts['test']:,}"]
+        ])
+    
     # Table styling with minimal spacing
     row_height = 0.5
-    start_y = 4.5
+    start_y = 5.5  # Adjusted for more rows
     
     # Draw table
     for i, row in enumerate(table_data):
@@ -150,12 +191,12 @@ def create_dataset_summary_table(dataset_name, stats, output_path):
             ax.add_patch(row_rect)
             
             # Data text
-            ax.text(1, y_pos, row[0], fontsize=10, va='center')
-            ax.text(5.5, y_pos, row[1], fontsize=10, va='center', ha='center', fontweight='bold')
+            ax.text(1, y_pos, row[0], fontsize=13, va='center')
+            ax.text(5.5, y_pos, row[1], fontsize=13, va='center', ha='center', fontweight='bold')
     
     # Add border around entire table
     table_border = patches.Rectangle((0.5, start_y - len(table_data) * row_height + 0.3), 
-                                   7, len(table_data) * row_height - 0.1, 
+                                   7, len(table_data) * row_height - 0.1,
                                    linewidth=2, edgecolor='black', facecolor='none')
     ax.add_patch(table_border)
     
@@ -197,6 +238,10 @@ def analyze_dataset(dataset_name, video_dir, gloss_dict_path, output_path):
     print("Analyzing dataset statistics...")
     num_signers, avg_words = analyze_dataset_stats(video_dir)
     
+    # Analyze split video counts
+    print("Analyzing split video counts...")
+    split_counts = analyze_split_video_counts(video_dir)
+    
     # Compile statistics
     stats = {
         'max_duration': max_duration,
@@ -208,6 +253,10 @@ def analyze_dataset(dataset_name, video_dir, gloss_dict_path, output_path):
         'total_hours': total_hours
     }
     
+    # Add split information if found
+    if split_counts:
+        stats['split_counts'] = split_counts
+    
     # Print results
     print(f"\n{dataset_name} Dataset Analysis Results:")
     print(f"Max duration: {max_duration:.1f} seconds")
@@ -217,6 +266,15 @@ def analyze_dataset(dataset_name, video_dir, gloss_dict_path, output_path):
     print(f"Average words per sample: {avg_words:.1f}")
     print(f"Total videos: {total_videos:,}")
     print(f"Total hours: {total_hours:.2f}")
+    
+    # Print split information if available
+    if split_counts:
+        print(f"\nSplit Distribution:")
+        print(f"Train videos: {split_counts['train']:,}")
+        print(f"Validation videos: {split_counts['val']:,}")
+        print(f"Test videos: {split_counts['test']:,}")
+    else:
+        print("\nNo split structure detected in dataset")
     
     # Create visualization
     print(f"\nCreating summary table...")
@@ -232,10 +290,10 @@ def main():
     # For VSL_V1: uncomment the second set, comment the first
     
     # VSL_V0 Configuration
-    dataset_name = "VSL_V0"
-    video_dir = "/home/martinvalentine/Desktop/v-sign/data/raw/VSL_V0"
-    gloss_dict_path = "/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V0/gloss_dict.npy"
-    output_path = "/home/martinvalentine/Desktop/v-sign/plots/vsl_v0_dataset_summary.svg"
+    dataset_name = "VSL_V2"
+    video_dir = "/home/martinvalentine/Desktop/v-sign/data/raw/VSL_V2"
+    gloss_dict_path = "/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V2/gloss_dict.npy"
+    output_path = "/home/martinvalentine/Desktop/v-sign/plots/vsl_v2_dataset_summary.svg"
     
     # VSL_V1 Configuration (current)
     # dataset_name = "VSL_V1"

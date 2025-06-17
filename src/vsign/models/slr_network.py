@@ -129,7 +129,7 @@ class SLRModel(nn.Module):
             "recognized_sents": pred,
         }
 
-    def criterion_calculation(self, ret_dict, label, label_lgt):
+    def criterion_calculation(self, ret_dict, label, label_lgt): # Calculate the loss based on the model outputs and labels
         loss = 0
         for k, weight in self.loss_weights.items():
             if k == 'ConvCTC':

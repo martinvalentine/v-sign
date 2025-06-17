@@ -50,10 +50,10 @@ def main():
 
     # --- Create and Launch Gradio Interface ---
     with gr.Blocks(title='Continuous Sign Language Recognition') as demo:
-        gr.Markdown("<center><font size=5>Continuous Sign Language Recognition</font></center>")
+        gr.Markdown("<center><font size=5>Nhận diện ngôn ngữ ký hiệu Tiếng Việt</font></center>")
 
         # --- Tab 1: Folder Path Inference ---
-        with gr.Tab("Folder path (Local test only)"):
+        with gr.Tab("Test với thư mục (Chỉ dùng cho test cục bộ)"):
             tab1_components = ui_components.create_folder_inference_tab()
             tab1_components["run_button"].click(
                 fn=folder_handler,  # Backend function with bound parameters
@@ -71,7 +71,7 @@ def main():
             )
 
         # --- Tab 2: Multi-Image Upload Inference ---
-        with gr.Tab("Test with images"):
+        with gr.Tab("Test với nhiều ảnh (dành cho test trực tuyến)"):
             tab2_components = ui_components.create_multi_image_inference_tab()
             # Preview button
             tab2_components["preview_button"].click(
@@ -96,18 +96,18 @@ def main():
             )
 
         # --- Tab 3: Video Upload Inference ---
-        with gr.Tab("Test with video"):
-            tab3_components = ui_components.create_video_inference_tab()
-            # Preview button
-            tab3_components["video_preview_button"].click(
-                lambda vid: vid,
-                inputs=tab3_components["video_input"],
-                outputs=tab3_components["video_gallery"]
-            )
+        # with gr.Tab("Test với video (dành cho test trực tuyến)"):
+        #     tab3_components = ui_components.create_video_inference_tab()
+        #     # Preview button
+        #     tab3_components["video_preview_button"].click(
+        #         lambda vid: vid,
+        #         inputs=tab3_components["video_input"],
+        #         outputs=tab3_components["video_gallery"]
+        #     )
 
     # Launch the app
     print("\nLaunching Gradio Interface...")
-    demo.launch(share=False)  # share=True generates a public link
+    demo.launch(share=True)  # share=True generates a public link
 
 if __name__ == "__main__":
     main()

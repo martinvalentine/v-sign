@@ -16,43 +16,43 @@ def create_folder_inference_tab():
             # Group the input fields together
             with gr.Group():
                 folder_path_input = gr.Textbox(
-                    label="Image Folder Path",
+                    label="Đường dẫn thư mục ảnh",
                     placeholder="/path/to/your/image_folder",
-                    info="Enter the full path to the folder containing image frames."
+                    info="Nhập đường dẫn đến thư mục chứa các ảnh khung hình"
                 )
                 api_key_input = gr.Textbox(
-                    label="Gemini API Key (Optional)",
-                    placeholder="Enter API Key only if you want to rephrase the gloss sequence",
+                    label="Gemini API Key (Tùy chọn)",
+                    placeholder="Nhập API Key nếu bạn chuyển từ ngôn ngữ ký hiệu sang câu Tiếng Việt",
                     type="password",
-                    info="Needed for rephrasing the output glosses into a sentence."
+                    info="Cần thiết để chuyển từ ngôn ngữ ký hiệu sang câu Tiếng Việt"
                 )
 
-            run_button = gr.Button("Run Recognition & Rephrase", variant="primary")
+            run_button = gr.Button("Chạy mô hình nhận diện & chuyển đổi sang câu Tiếng Việt", variant="primary")
 
             # Group the text output fields together
             with gr.Group():
                 results_output = gr.Textbox(
-                    label="Output Gloss Sequence",
+                    label="Kết quả nhận diện (ngôn ngữ ký hiệu)",
                     interactive=False
                 )
                 
                 # Separate timing fields
                 with gr.Row():
                     model_time_display = gr.Textbox(
-                        label="Model Inference Time",
+                        label="Thời gian chạy mô hình nhận diện",
                         value="Waiting...",
                         interactive=False,
                         scale=1
                     )
                     llm_time_display = gr.Textbox(
-                        label="LLM Rephrasing Time", 
+                        label="Thời gian chuyển đổi sang câu Tiếng Việt", 
                         value="Waiting...",
                         interactive=False,
                         scale=1
                     )
                 
                 rephrased_sentence = gr.Textbox(
-                    label="Rephrased Sentence / Status",  # Label reflects it might show status
+                    label="Câu được chuyển đổi sang Tiếng Việt / Trạng thái",  # Label reflects it might show status
                     interactive=False
                 )
         # --- Right Column: Contains the visual image output ---
@@ -88,9 +88,9 @@ def create_multi_image_inference_tab():
     """
     with gr.Row(equal_height=False) as multi_image_tab:
         with gr.Column(scale=2):
-            gr.Markdown("<b>Upload multiple images (frames) for sign language recognition:</b>")
+            gr.Markdown("<b>Tải lên nhiều ảnh (khung hình) để nhận diện ngôn ngữ ký hiệu Tiếng Việt:</b>")
             multi_image_input = gr.Files(
-                label="Upload Images",
+                label="Tải lên các ảnh",
                 file_types=['image'],
                 file_count="multiple",
                 elem_id="multi_image_upload",
@@ -98,39 +98,39 @@ def create_multi_image_inference_tab():
                 height=200  # Limit height so the file list is scrollable
             )
             multi_api_key_input = gr.Textbox(
-                label="Gemini API Key (Optional)",
-                placeholder="Enter API Key only if you want to rephrase the gloss sequence",
+                label="Gemini API Key (Tùy chọn)",
+                placeholder="Nhập API Key nếu bạn chuyển từ ngôn ngữ ký hiệu sang câu Tiếng Việt",
                 type="password",
-                info="Needed for rephrasing the output glosses into a sentence."
+                info="Cần thiết để chuyển từ ngôn ngữ ký hiệu sang câu Tiếng Việt"
             )
             with gr.Row():
-                preview_button = gr.Button("Preview Images", variant="secondary")
-                multi_image_run = gr.Button("Run Inference", variant="primary")
+                preview_button = gr.Button("Xem trước các ảnh đã tải lên", variant="secondary")
+                multi_image_run = gr.Button("Chạy mô hình nhận diện", variant="primary")
             multi_image_output = gr.Textbox(
-                label="Recognized Gloss Sequence",
+                label="Kết quả nhận diện (ngôn ngữ ký hiệu)",
                 interactive=False
             )
             # Separate timing fields
             with gr.Row():
                 multi_model_time_display = gr.Textbox(
-                    label="Model Inference Time",
-                    value="Waiting...",
+                    label="Thời gian chạy mô hình nhận diện",
+                    value="Đang chờ...",
                     interactive=False,
                     scale=1
                 )
                 multi_llm_time_display = gr.Textbox(
-                    label="LLM Rephrasing Time", 
-                    value="Waiting...",
+                    label="Thời gian chuyển đổi sang câu Tiếng Việt", 
+                    value="Đang chờ...",
                     interactive=False,
                     scale=1
                 )
             multi_rephrased_sentence = gr.Textbox(
-                label="Rephrased Sentence / Status",
+                label="Câu được chuyển đổi sang Tiếng Việt / Trạng thái",
                 interactive=False
             )
         with gr.Column(scale=1):
             multi_image_preview = gr.Gallery(
-                label="Preview Uploaded Images",
+                label="Xem trước các ảnh đã tải lên",
                 show_label=True,
                 columns=3,  # Fewer columns for larger images and less clutter
                 height=500, # Lower height to show fewer images at once
@@ -161,46 +161,46 @@ def create_video_inference_tab():
     """
     with gr.Row(equal_height=False) as video_tab:
         with gr.Column(scale=2):
-            gr.Markdown("<b>Upload a video file for sign language recognition:</b>")
+            gr.Markdown("<b>Upload video để nhận diện ngôn ngữ ký hiệu Tiếng Việt:</b>")
             video_input = gr.Video(
                 sources=["upload"],
                 label="Upload Video",
                 show_label=True
             )
             video_api_key_input = gr.Textbox(
-                label="Gemini API Key (Optional)",
-                placeholder="Enter API Key only if you want to rephrase the gloss sequence",
+                label="Gemini API Key (Tùy chọn)",
+                placeholder="Nhập API Key nếu bạn chuyển từ ngôn ngữ ký hiệu sang câu Tiếng Việt",
                 type="password",
-                info="Needed for rephrasing the output glosses into a sentence."
+                info="Cần thiết để chuyển từ ngôn ngữ ký hiệu sang câu Tiếng Việt"
             )
             with gr.Row():
-                video_preview_button = gr.Button("Preview Video", variant="secondary")
-                video_run = gr.Button("Run Inference", variant="primary")
+                video_preview_button = gr.Button("Xem trước video", variant="secondary")
+                video_run = gr.Button("Chạy mô hình nhận diện", variant="primary")
             video_output = gr.Textbox(
-                label="Recognized Gloss Sequence",
+                label="Kết quả nhận diện (ngôn ngữ ký hiệu)",
                 interactive=False
             )
             # Separate timing fields
             with gr.Row():
                 video_model_time_display = gr.Textbox(
-                    label="Model Inference Time",
-                    value="Waiting...",
+                    label="Thời gian chạy mô hình nhận diện",
+                    value="Đang chờ...",
                     interactive=False,
                     scale=1
                 )
                 video_llm_time_display = gr.Textbox(
-                    label="LLM Rephrasing Time", 
-                    value="Waiting...",
+                    label="Thời gian chuyển đổi sang câu Tiếng Việt", 
+                    value="Đang chờ...",
                     interactive=False,
                     scale=1
                 )
             video_rephrased_sentence = gr.Textbox(
-                label="Rephrased Sentence / Status",
+                label="Câu được chuyển đổi sang Tiếng Việt / Trạng thái",
                 interactive=False
             )
         with gr.Column(scale=1):
             video_gallery = gr.Gallery(
-                label="Extracted/Processed Frames",
+                label="Các khung hình được trích xuất/xử lý",
                 show_label=True,
                 columns=5,
                 height=600,

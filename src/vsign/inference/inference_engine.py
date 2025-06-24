@@ -117,8 +117,8 @@ def run_inference_pipeline(img_list, valid_images_info, model, device, input_api
         # Calculate total execution time
         total_end_time = time.time()
         total_time_taken = total_end_time - total_start_time
-        print(f"Thời gian thực hiện pipeline dự đoán: {total_time_taken:.4f} giây")
-        
+        print(f"Total pipeline execution time: {total_time_taken:.4f} seconds")
+
         # Prepare timing information
         timing_info = {
             'inference_time': inference_time_taken,

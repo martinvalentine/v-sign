@@ -52,19 +52,47 @@ def gradio_folder_handler(folder_path, input_api_key, model, device, gloss_dict,
         cache_key = cache_manager.get_cache_key(file_paths=valid_image_paths)
         print(f"Generated cache key: {cache_key[:8]}...")
         
-        # Check if result is cached
-        cached_result = cache_manager.get_cached_result(cache_key)
+        # Check if we have an API key for LLM rephrasing
+        has_api_key = bool(input_api_key and input_api_key.strip())
         
-        if cached_result:
-            # Return cached result
-            print(f"Sử dụng kết quả từ bộ nhớ cache (hit count: {cached_result.cache_hit_count})")
+        # Check if result is cached and whether it needs rephrasing
+        needs_rephrasing, cached_result = cache_manager.check_needs_rephrasing(cache_key, has_api_key)
+        
+        if needs_rephrasing:
+            # We have cached model prediction but need to add LLM rephrasing
+            print(f"Found cached prediction, running LLM rephrasing only...")
             
+            try:
+                # Run only the LLM rephrasing step
+                rephrased_sentence, llm_time_taken = llm_handler.rephrase_glosses(
+                    cached_result.result_string, input_api_key
+                )
+                
+                # Update the cache with new rephrasing
+                cache_manager.update_cached_rephrasing(cache_key, rephrased_sentence, llm_time_taken)
+                
+                # Format displays - model time is cached, LLM time is new
+                model_time_display = f"{cached_result.timing_info['inference_time']:.4f} seconds (cached)"
+                llm_time_display = f"{llm_time_taken:.4f} seconds"
+                cache_info = cache_manager.get_cache_info_string()
+                rephrased_with_timing = f"{rephrased_sentence}\n\n🔄 Used cached prediction + new LLM rephrasing! Model time: {cached_result.timing_info['inference_time']:.4f} seconds\n{cache_info}"
+                
+                return cached_result.result_string, model_time_display, llm_time_display, rephrased_with_timing, valid_image_paths
+                
+            except Exception as e:
+                print(f"Error in LLM rephrasing: {e}")
+                # Fall through to regular processing
+        
+        elif cached_result:
+            # Complete cached result (model + LLM both cached)
+            print(f"Using complete cached result (hit count: {cached_result.cache_hit_count})")
+
             # Format displays with cached timing but indicate it's from cache
             model_time_display = f"{cached_result.timing_info['inference_time']:.4f} seconds (cached)"
             llm_time_display = f"{cached_result.timing_info['llm_time']:.4f} seconds (cached)"
             cache_info = cache_manager.get_cache_info_string()
-            rephrased_with_timing = f"{cached_result.rephrased_sentence}\n\nKết quả từ bộ nhớ cache! Thời gian gốc {cached_result.timing_info['total_time']:.4f} seconds\n{cache_info}"
-            
+            rephrased_with_timing = f"{cached_result.rephrased_sentence}\n\n⚡ Complete result from cache! Original time: {cached_result.timing_info['total_time']:.4f} seconds\n{cache_info}"
+
             return cached_result.result_string, model_time_display, llm_time_display, rephrased_with_timing, valid_image_paths
             
     except Exception as e:
@@ -87,16 +115,16 @@ def gradio_folder_handler(folder_path, input_api_key, model, device, gloss_dict,
         try:
             cache_manager.store_result(cache_key, result_string, rephrased_sentence, timing_info)
             cache_info = cache_manager.get_cache_info_string()
-            print(f"Lưu kết quả vào bộ nhớ cache.{cache_info}")
+            print(f"Save result to cache.{cache_info}")
         except Exception as e:
-            print(f"Lưu kết quả vào bộ nhớ cache thất bại: {e}")
-            cache_info = "Lưu kết quả vào bộ nhớ cache thất bại"
+            print(f"Failed to save result to cache: {e}")
+            cache_info = "Failed to save result to cache"
     else:
-        cache_info = "Bộ nhớ cache không khả dụng"
-    
-    print(f"Kết quả dự đoán: {result_string}")
-    print(f"Câu được chuyển sang ngôn ngữ Tiếng Việt: {rephrased_sentence}")
-    print(f"Hình ảnh đã xử lý: {len(image_paths)}")
+        cache_info = "Cache not available"
+
+    print(f"Prediction result: {result_string}")
+    print(f"Rephrased sentence: {rephrased_sentence}")
+    print(f"Processed images: {len(image_paths)}")
 
     # Format individual timing displays
     model_time_display = f"{timing_info['inference_time']:.4f} giây"
@@ -141,18 +169,46 @@ def gradio_multi_image_inference_handler(uploaded_files, input_api_key, model, d
         cache_key = cache_manager.get_cache_key(img_list=img_list)
         print(f"Generated cache key: {cache_key[:8]}...")
         
-        # Check if result is cached
-        cached_result = cache_manager.get_cached_result(cache_key)
+        # Check if we have an API key for LLM rephrasing
+        has_api_key = bool(input_api_key and input_api_key.strip())
         
-        if cached_result:
-            # Return cached result
-            print(f"Using cached result (hit count: {cached_result.cache_hit_count})")
+        # Check if result is cached and whether it needs rephrasing
+        needs_rephrasing, cached_result = cache_manager.check_needs_rephrasing(cache_key, has_api_key)
+        
+        if needs_rephrasing:
+            # We have cached model prediction but need to add LLM rephrasing
+            print(f"Found cached prediction, running LLM rephrasing only...")
+            
+            try:
+                # Run only the LLM rephrasing step
+                rephrased_sentence, llm_time_taken = llm_handler.rephrase_glosses(
+                    cached_result.result_string, input_api_key
+                )
+                
+                # Update the cache with new rephrasing
+                cache_manager.update_cached_rephrasing(cache_key, rephrased_sentence, llm_time_taken)
+                
+                # Format displays - model time is cached, LLM time is new
+                model_time_display = f"{cached_result.timing_info['inference_time']:.4f} seconds (cached)"
+                llm_time_display = f"{llm_time_taken:.4f} seconds"
+                cache_info = cache_manager.get_cache_info_string()
+                rephrased_with_timing = f"{rephrased_sentence}\n\n🔄 Used cached prediction + new LLM rephrasing! Model time: {cached_result.timing_info['inference_time']:.4f} seconds\n{cache_info}"
+                
+                return cached_result.result_string, model_time_display, llm_time_display, rephrased_with_timing, valid_images
+                
+            except Exception as e:
+                print(f"Error in LLM rephrasing: {e}")
+                # Fall through to regular processing
+        
+        elif cached_result:
+            # Complete cached result (model + LLM both cached)
+            print(f"Using complete cached result (hit count: {cached_result.cache_hit_count})")
             
             # Format displays with cached timing but indicate it's from cache
             model_time_display = f"{cached_result.timing_info['inference_time']:.4f} seconds (cached)"
             llm_time_display = f"{cached_result.timing_info['llm_time']:.4f} seconds (cached)"
             cache_info = cache_manager.get_cache_info_string()
-            rephrased_with_timing = f"{cached_result.rephrased_sentence}\n\n⚡ Result from cache! Original time: {cached_result.timing_info['total_time']:.4f} seconds\n{cache_info}"
+            rephrased_with_timing = f"{cached_result.rephrased_sentence}\n\n⚡ Complete result from cache! Original time: {cached_result.timing_info['total_time']:.4f} seconds\n{cache_info}"
             
             return cached_result.result_string, model_time_display, llm_time_display, rephrased_with_timing, valid_images
             

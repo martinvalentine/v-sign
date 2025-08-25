@@ -2,7 +2,7 @@ import re
 import matplotlib.pyplot as plt
 
 # Path to the log file
-log_path = '/home/martinvalentine/Desktop/v-sign/outputs/logs/baseline_res18/log.txt'
+log_path = '/home/kafka/Desktop/v-sign/outputs/logs/baseline_res18/log.txt'
 
 # Lists to store epochs and WERs
 epochs = []

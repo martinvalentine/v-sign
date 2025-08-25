@@ -95,7 +95,7 @@ class Preprocessing:
 
     def resize_dataset(video_idx, dsize, info_dict):
         info = info_dict[video_idx]
-        prefix = '/home/martinvalentine/Desktop/v-sign/data/interim/frames/VSL_V0'
+        prefix = '/home/kafka/Desktop/v-sign/data/interim/frames/VSL_V0'
         img_list = glob.glob(f"{prefix}/{info['folder']}")
         for img_path in img_list:
             rs_img = resize_img(img_path, dsize=dsize)
@@ -125,13 +125,13 @@ if __name__ == '__main__':
     parser.add_argument('--dataset-prefix', type=str, default='vsl_v0',
                         help='Save prefix for ground truth file')
     parser.add_argument('--processed-feature-root', type=str,
-                        default='/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V0',
+                        default='/home/kafka/Desktop/v-sign/data/processed/VSL_V0',
                         help='Path to save the processed feature')
     parser.add_argument('--dataset-root', type=str,
-                        default='/home/martinvalentine/Desktop/v-sign/data/interim/frames/VSL_V0',
+                        default='/home/kafka/Desktop/v-sign/data/interim/frames/VSL_V0',
                         help='Path to the dataset root (where frame folders are located)')
     parser.add_argument('--annotation-prefix', type=str,
-                        default='/home/martinvalentine/Desktop/v-sign/data/splits/VSL_V0/csv/{}_annotations.csv',
+                        default='/home/kafka/Desktop/v-sign/data/splits/VSL_V0/csv/{}_annotations.csv',
                         help='Path template for CSV annotations with mode placeholder (train/test/dev)')
     parser.add_argument('--output-res', type=str, default='256x256px',
                         help='Resize resolution for image sequences, e.g., 256x256px')
@@ -162,7 +162,7 @@ if __name__ == '__main__':
         Preprocessing.generate_stm(info_dict, stm_path)
 
         # Save ground truth to evaluation folder
-        eval_path = "/home/martinvalentine/Desktop/v-sign/src/vsign/evaluation/slr_eval/"
+        eval_path = "/home/kafka/Desktop/v-sign/src/vsign/evaluation/slr_eval/"
         os.makedirs(eval_path, exist_ok=True)  # Create folder if not exist
         stm_eval_path = os.path.join(eval_path, f"{args.dataset_prefix}-ground-truth-{mode}.stm".lower())
         Preprocessing.generate_stm(info_dict, stm_eval_path)

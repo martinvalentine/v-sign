@@ -122,8 +122,8 @@ def main():
     """Main function to create the sample visualization"""
     
     # Define paths
-    base_path = "/home/martinvalentine/Desktop/v-sign/data/interim/256x256px/VSL_V1"
-    output_path = "/home/martinvalentine/Desktop/v-sign/plots/vsl_v1_dataset_samples.svg"
+    base_path = "/home/kafka/Desktop/v-sign/data/interim/256x256px/VSL_V1"
+    output_path = "/home/kafka/Desktop/v-sign/plots/vsl_v1_dataset_samples.svg"
     
     # Check if base path exists
     if not os.path.exists(base_path):

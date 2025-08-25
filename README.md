@@ -123,7 +123,7 @@ Classification (Predictions)
 
 3.  **Combine both steps:**
     ```bash
-      python /home/martinvalentine/Desktop/v-sign/src/vsign/data/vsl_preprocess_new.py --extract-frames --video-root /home/martinvalentine/Desktop/v-sign/data/raw/VSL_V2 --dataset-root /home/martinvalentine/Desktop/v-sign/data/interim/256x256px/VSL_V2 --processed-feature-root /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V2 --multiprocessing 
+      python /home/kafka/Desktop/v-sign/src/vsign/data/vsl_preprocess_new.py --extract-frames --video-root /home/kafka/Desktop/v-sign/data/raw/VSL_V2 --dataset-root /home/kafka/Desktop/v-sign/data/interim/256x256px/VSL_V2 --processed-feature-root /home/kafka/Desktop/v-sign/data/processed/VSL_V2 --multiprocessing 
     ``` 
 
 ## Training

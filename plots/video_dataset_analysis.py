@@ -291,15 +291,15 @@ def main():
     
     # VSL_V0 Configuration
     dataset_name = "VSL_V2"
-    video_dir = "/home/martinvalentine/Desktop/v-sign/data/raw/VSL_V2"
-    gloss_dict_path = "/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V2/gloss_dict.npy"
-    output_path = "/home/martinvalentine/Desktop/v-sign/plots/vsl_v2_dataset_summary.svg"
+    video_dir = "/home/kafka/Desktop/v-sign/data/raw/VSL_V2"
+    gloss_dict_path = "/home/kafka/Desktop/v-sign/data/processed/VSL_V2/gloss_dict.npy"
+    output_path = "/home/kafka/Desktop/v-sign/plots/vsl_v2_dataset_summary.svg"
     
     # VSL_V1 Configuration (current)
     # dataset_name = "VSL_V1"
-    # video_dir = "/home/martinvalentine/Desktop/v-sign/data/raw/VSL_V1"
-    # gloss_dict_path = "/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V1/gloss_dict.npy"
-    # output_path = "/home/martinvalentine/Desktop/v-sign/plots/vsl_v1_dataset_summary.svg"
+    # video_dir = "/home/kafka/Desktop/v-sign/data/raw/VSL_V1"
+    # gloss_dict_path = "/home/kafka/Desktop/v-sign/data/processed/VSL_V1/gloss_dict.npy"
+    # output_path = "/home/kafka/Desktop/v-sign/plots/vsl_v1_dataset_summary.svg"
     
     # Check if paths exist
     if not os.path.exists(video_dir):

@@ -218,10 +218,10 @@ def parse_args():
         description='Print information from processed VSL dataset files.')
     
     parser.add_argument('--processed-root', type=str,
-                        default='/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V2',
+                        default='/home/kafka/Desktop/v-sign/data/processed/VSL_V2',
                         help='Path to processed feature root')
     parser.add_argument('--csv-root', type=str,
-                        default='/home/martinvalentine/Desktop/v-sign/data/splits/VSL_V2/csv',
+                        default='/home/kafka/Desktop/v-sign/data/splits/VSL_V2/csv',
                         help='Path to CSV annotations root')
     parser.add_argument('--dataset-prefix', type=str, default='vsl_v2',
                         help='Dataset prefix for STM files')

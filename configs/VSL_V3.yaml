@@ -1,5 +1,5 @@
-#dataset_root: /home/martinvalentine/Desktop/CSLR-VSL/data/processed/VSL_Sample/features/256x256px
-dataset_root: /home/martinvalentine/Desktop/v-sign/data/interim/256x256px/VSL_V3
-dict_path: /home/martinvalentine/Desktop/v-sign/data/processed/VSL_V3/gloss_dict.npy
-evaluation_dir: /home/martinvalentine/Desktop/v-sign/src/vsign/evaluation/slr_eval
+#dataset_root: /home/kafka/Desktop/CSLR-VSL/data/processed/VSL_Sample/features/256x256px
+dataset_root: /home/kafka/Desktop/v-sign/data/interim/256x256px/VSL_V3
+dict_path: /home/kafka/Desktop/v-sign/data/processed/VSL_V3/gloss_dict.npy
+evaluation_dir: /home/kafka/Desktop/v-sign/src/vsign/evaluation/slr_eval
 evaluation_prefix: vsl_v3-ground-truth

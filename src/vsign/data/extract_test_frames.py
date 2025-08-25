@@ -86,10 +86,10 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # 1. Set the FULL PATH to the single video file you want to process
-    INPUT_VIDEO_FILEPATH = Path("/home/martinvalentine/Desktop/khoe_test.mov") # TODO: CHANGE THIS PATH
+    INPUT_VIDEO_FILEPATH = Path("/home/kafka/Desktop/khoe_test.mov") # TODO: CHANGE THIS PATH
 
     # 2. Set the Base directory where the video-specific subfolder will be created
-    OUTPUT_BASE_DIR = Path("/home/martinvalentine/Desktop/frame") # TODO: CHANGE THIS PATH
+    OUTPUT_BASE_DIR = Path("/home/kafka/Desktop/frame") # TODO: CHANGE THIS PATH
 
     # 3. Set the desired dimensions for the resized frames
     RESIZE_WIDTH = 256
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         video_name_stem = INPUT_VIDEO_FILEPATH.name # Fallback to full name if stem is empty
 
     # Create the full path for this video's output folder
-    # e.g., /home/martinvalentine/Desktop/frame/Ban_khoe
+    # e.g., /home/kafka/Desktop/frame/Ban_khoe
     output_frames_folder = OUTPUT_BASE_DIR / video_name_stem
 
     # --- Execute ---

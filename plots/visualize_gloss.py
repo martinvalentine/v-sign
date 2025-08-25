@@ -336,11 +336,11 @@ def main():
     """Main function to analyze and visualize gloss data"""
     
     # File paths
-    gloss_dict_path = "/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V1/gloss_dict.npy"
-    dev_info_path = "/home/martinvalentine/Desktop/v-sign/data/processed/VSL_V1/train_info.npy"
+    gloss_dict_path = "/home/kafka/Desktop/v-sign/data/processed/VSL_V1/gloss_dict.npy"
+    dev_info_path = "/home/kafka/Desktop/v-sign/data/processed/VSL_V1/train_info.npy"
     
     # Output paths
-    plots_dir = "/home/martinvalentine/Desktop/v-sign/plots"
+    plots_dir = "/home/kafka/Desktop/v-sign/plots"
     os.makedirs(plots_dir, exist_ok=True)
     
     frequency_chart_path = os.path.join(plots_dir, "vsl_v0_gloss_frequencies.svg")

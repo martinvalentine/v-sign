@@ -1,0 +1,36 @@
+[project]
+name = "v-sign"
+version = "0.1.0"
+description = "V-Sign: A sign language recognition and translation system based on Corrnet"
+readme = "README.md"
+requires-python = ">=3.8,<3.10"
+dependencies = [
+    "pydantic==2.10.6",
+    "torch==1.12.0+cu116",
+    "torchaudio==0.12.0+cu116",
+    "torchvision==0.13.0+cu116",
+    "numpy>=1.24,<2.0",
+    "gradio>=4.44.1",
+    "opencv-python>=4.11.0.86",
+    "scipy>=1.10.1",
+    "litellm<1.76",
+    "tokenizers<0.21",
+    "setuptools>=75.3.2",
+    "pip>=25.0.1",
+    "wheel>=0.45.1",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu116" }
+torchvision = { index = "pytorch-cu116" }
+torchaudio = { index = "pytorch-cu116" }
+
+[[tool.uv.index]]
+name = "pytorch-cu116"
+url = "https://download.pytorch.org/whl/cu116"
+explicit = true
+
+[tool.uv.workspace]
+members = [
+    "third_party/ctcdecode",
+]

@@ -7,7 +7,7 @@ requires-python = ">=3.8,<3.10"
 dependencies = [
     # Core
     "numpy<2.0",
-    "pydantic>=2.10.6",
+    "pydantic<=2.10.6",
     # ML/AI
     "torch==2.1.2+cu121",
     "torchaudio==2.1.2+cu121",
